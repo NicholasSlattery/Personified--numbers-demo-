@@ -3,7 +3,9 @@
 Personified is a browser game for two players.  
 One player "becomes" a secretly chosen number. The other player has to guess that number by asking questions about its personality, vibe, reputation, etc. You aren't allowed to just ask math questions. You have to treat the number like a person.
 
-This repo is the working numbers-only prototype. It runs fully in the browser using plain HTML, CSS, and vanilla JavaScript. No build step. No backend. :contentReference[oaicite:6]{index=6} :contentReference[oaicite:7]{index=7} :contentReference[oaicite:8]{index=8}
+This repo is the working numbers-only prototype. It runs fully in the browser using plain HTML, CSS, and vanilla JavaScript. No build step. No backend.
+
+🎮 **[Play Online](https://personifiednumbers.netlify.app)** - Live deployment of the game
 
 ---
 
