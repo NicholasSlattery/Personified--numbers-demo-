@@ -61,24 +61,24 @@
             <label class="field" for="p1Input">
               <span>Player 1 name</span>
             </label>
-            <input id="p1Input" type="text" inputmode="text" placeholder="Alice" />
+            <input id="p1Input" type="text" inputmode="text" placeholder="Player 1" />
 
             <label class="field" for="p2Input">
               <span>Player 2 name</span>
             </label>
-            <input id="p2Input" type="text" inputmode="text" placeholder="Bob" />
+            <input id="p2Input" type="text" inputmode="text" placeholder="Player 2" />
           </div>
 
           <div>
             <h3 class="seg">Rules</h3>
             <label class="field" for="minInput">
-              <span>Range Min</span>
+              <span>Range Minimum</span>
             </label>
             <input id="minInput" type="number" inputmode="numeric" pattern="[0-9]*" value="1" aria-describedby="hint-range" />
-            <small class="hint" id="hint-range">Min must be less than Max.</small>
+            <small class="hint" id="hint-range">The minimum must be less than the maximum.</small>
 
             <label class="field" for="maxInput">
-              <span>Range Max</span>
+              <span>Range Maximum</span>
             </label>
             <input id="maxInput" type="number" inputmode="numeric" pattern="[0-9]*" value="10" aria-describedby="hint-range rangeError" />
             <div id="rangeError" class="error" aria-live="polite" role="alert"></div>
