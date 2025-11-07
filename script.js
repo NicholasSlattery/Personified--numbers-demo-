@@ -623,6 +623,18 @@ if (mqPortrait.addEventListener) {
 onOrientationChange(mqPortrait);
 
 // -------------------------
+// Orientation Detection
+// -------------------------
+const mq = window.matchMedia('(orientation: portrait)');
+function logOrientation(e){
+  const mode = e.matches ? 'portrait' : 'landscape';
+  console.debug('[ui] orientation ->', mode);
+}
+if (mq.addEventListener) mq.addEventListener('change', logOrientation);
+else if (mq.addListener) mq.addListener(logOrientation);
+logOrientation(mq);
+
+// -------------------------
 // Boot
 // -------------------------
 updateHUD();

@@ -13,34 +13,36 @@
 
   <!-- App Shell -->
   <main role="main" class="app">
-    <!-- HUD / Top Bar -->
-    <header class="hud glass">
-      <div class="hud-row">
-        <div class="scores">
-          <div class="score" id="p1Card">
-            <small class="role" id="p1Role"></small>
-            <span class="label" id="p1Name">Player 1</span>
-            <span class="value" id="p1Score">0</span>
-            <small class="sub" id="p1Guesses">0 guesses</small>
+    <div class="shell">
+      <aside id="playerPanel" class="player-panel">
+        <!-- Player HUD / Score Panel -->
+        <header class="hud glass">
+          <div class="scores">
+            <div class="score" id="p1Card">
+              <small class="role" id="p1Role"></small>
+              <span class="label" id="p1Name">Player 1</span>
+              <span class="value" id="p1Score">0</span>
+              <small class="sub" id="p1Guesses">0 guesses</small>
+            </div>
+            <div class="divider"></div>
+            <div class="score" id="p2Card">
+              <small class="role" id="p2Role"></small>
+              <span class="label" id="p2Name">Player 2</span>
+              <span class="value" id="p2Score">0</span>
+              <small class="sub" id="p2Guesses">0 guesses</small>
+            </div>
           </div>
-          <div class="divider"></div>
-          <div class="score" id="p2Card">
-            <small class="role" id="p2Role"></small>
-            <span class="label" id="p2Name">Player 2</span>
-            <span class="value" id="p2Score">0</span>
-            <small class="sub" id="p2Guesses">0 guesses</small>
+          <div class="hud-actions">
+            <button class="icon-btn btn-ghost" id="homeIcon" aria-label="Home" type="button">Home</button>
+            <!-- Swap removed -->
           </div>
-        </div>
+          <div class="hud-row">
+            <span class="inplay" id="inPlayText" aria-live="polite">In Play: 1-10</span>
+          </div>
+        </header>
+      </aside>
 
-        <div class="hud-actions">
-          <button class="icon-btn btn-ghost" id="homeIcon" aria-label="Home" type="button">Home</button>
-          <!-- Swap removed -->
-        </div>
-      </div>
-      <div class="hud-row">
-        <span class="inplay" id="inPlayText" aria-live="polite">In Play: 1-10</span>
-      </div>
-    </header>
+      <section id="mainPanel" class="main-panel">
 
     <!-- Config Screen (now a structured card) -->
     <section id="screen-config" class="screen active">
@@ -109,8 +111,10 @@
         </div>
 
         <footer class="card-ft cta-row">
-          <button id="startBtn" class="btn btn-primary" type="button">Start Match</button>
-          <button id="howToPlayBtn" class="btn btn-ghost" type="button">How to Play</button>
+          <div class="actions actions-config">
+            <button id="startBtn" class="btn btn-primary" type="button">Start Match</button>
+            <button id="howToPlayBtn" class="btn btn-ghost" type="button">How to Play</button>
+          </div>
         </footer>
       </section>
     </section>
@@ -191,6 +195,7 @@
       <div class="actions">
         <button class="btn primary" id="onboardOk" type="button">Got it</button>
       </div>
+    </section>
     </div>
   </main>
 
