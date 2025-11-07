@@ -599,6 +599,30 @@ function resetHard(){
 }
 
 // -------------------------
+// Orientation hooks
+// -------------------------
+const mqPortrait = window.matchMedia('(orientation: portrait)');
+function onOrientationChange(e){
+  const mode = e.matches ? 'portrait' : 'landscape';
+  // Example: track for UX analysis (uses existing track() stub)
+  if (typeof track === 'function') track('orientation_change', { mode });
+
+  // Example: tweak reveal/guess helper copy if desired
+  // const help = document.querySelector('.microhelp');
+  // if (help) help.textContent = mode === 'portrait'
+  //   ? 'Tip: Bigger buttons in portrait; great for one-handed play.'
+  //   : 'Tip: Landscape fits more controls side-by-side.';
+}
+if (mqPortrait.addEventListener) {
+  mqPortrait.addEventListener('change', onOrientationChange);
+} else if (mqPortrait.addListener) {
+  // Safari < 14 fallback
+  mqPortrait.addListener(onOrientationChange);
+}
+// Fire once on load
+onOrientationChange(mqPortrait);
+
+// -------------------------
 // Boot
 // -------------------------
 updateHUD();
