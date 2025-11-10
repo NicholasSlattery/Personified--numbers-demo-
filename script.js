@@ -649,3 +649,34 @@ updateHUD();
     }
   });
 });
+
+// Register Service Worker for PWA/offline support
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => {
+        // If there's an already waiting worker, activate it
+        if (reg.waiting) promptReload(reg.waiting);
+        reg.addEventListener('updatefound', () => {
+          const newWorker = reg.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener('statechange', () => {
+            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+              promptReload(newWorker);
+            }
+          });
+        });
+      })
+      .catch(err => console.error('SW registration failed', err));
+  });
+}
+
+function promptReload(worker) {
+  // Auto-activate the new SW and reload to get the latest assets
+  try {
+    worker.postMessage('SKIP_WAITING');
+  } catch (e) {
+    /* ignore */
+  }
+  window.location.reload();
+}
