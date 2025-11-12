@@ -184,6 +184,57 @@ function track(event, props = {}) {
 // -------------------------
 // Helpers
 // -------------------------
+// === Dynamic slot sizing so tiles never clip or poke out ===
+// Computes CSS vars so exactly 3 full tiles are visible (left, center, right)
+function layoutSlot() {
+  if (!slotViewport) return;
+
+  // Measured viewport width for the slot
+  const vw = Math.floor(slotViewport.getBoundingClientRect().width);
+
+  // These must mirror CSS variables
+  const GAP = 12;   // --slot-gap
+  const PAD = 24;   // --slot-pad
+  const H_PADDING = PAD * 2;
+
+  // Available content width inside the reel between paddings
+  const contentW = Math.max(0, vw - H_PADDING);
+
+  // We want 3 tiles and 2 gaps: [tile][gap][tile][gap][tile]
+  const tileW = Math.max(56, Math.floor((contentW - 2 * GAP) / 3));
+
+  // Height and font scale with width, clamped for legibility
+  const tileH = Math.max(44, Math.min(92, Math.round(tileW * 0.7)));
+  const tileFont = Math.max(28, Math.min(44, Math.round(tileW * 0.48)));
+
+  const root = document.documentElement;
+  root.style.setProperty('--slot-w', `${vw}px`);
+  root.style.setProperty('--tile-w', `${tileW}px`);
+  root.style.setProperty('--tile-h', `${tileH}px`);
+  root.style.setProperty('--tile-font', `${tileFont}px`);
+
+  // After a resize/orientation change, re-center the selected tile if present
+  const selected = slotReel?.querySelector('.tile.selected');
+  if (selected) {
+    // cancel any in-flight transition; then recentre without animation
+    slotReel.style.transition = 'none';
+    // use rAF twice to ensure styles have applied before centering
+    requestAnimationFrame(() => {
+      centerOnTile(selected, 0);
+    });
+  }
+}
+
+// Recompute tile sizes on load, resize, rotation, and when the slot's box changes
+window.addEventListener('load', layoutSlot);
+window.addEventListener('resize', layoutSlot);
+window.addEventListener('orientationchange', layoutSlot);
+
+if (window.ResizeObserver && slotViewport) {
+  const ro = new ResizeObserver(layoutSlot);
+  ro.observe(slotViewport);
+}
+
 function setDefaultTimer(seconds){
   defaultTimerSeconds = Math.max(10, parseInt(seconds, 10));
   localStorage.setItem('defaultTimer', String(defaultTimerSeconds));
@@ -334,14 +385,16 @@ function centerOnTile(tile, durationMs = 1100){
     getComputedStyle(slotReel).transform
   ).m41 || 0;
 
-  // distance we need to move the reel (negative to move left)
   const delta = viewportCenter - tileCenter;
   const targetTx = currentTx + delta;
 
-  slotReel.style.transition = `transform ${durationMs}ms cubic-bezier(.2,.9,.2,1)`;
+  // Allow instant re-centering after layout changes
+  const ms = Math.max(0, durationMs);
+  slotReel.style.transition = ms ? `transform ${ms}ms cubic-bezier(.2,.9,.2,1)` : 'none';
   slotReel.style.transform = `translateX(${targetTx}px)`;
 
   return new Promise(resolve => {
+    if (!ms) return resolve(); // no transition, resolve immediately
     const onEnd = () => {
       slotReel.removeEventListener("transitionend", onEnd);
       resolve();
@@ -408,6 +461,8 @@ async function spinSlot(auto = false){
   spinning = true;
   spinBtn.disabled = true;
   passBtn.disabled = true;
+
+  layoutSlot(); // ensure up-to-date tile sizes for current viewport
 
   // choose target and remember
   const target = nextNumber();
@@ -604,9 +659,9 @@ function resetHard(){
 const mqPortrait = window.matchMedia('(orientation: portrait)');
 function onOrientationChange(e){
   const mode = e.matches ? 'portrait' : 'landscape';
-  // Example: track for UX analysis (uses existing track() stub)
   if (typeof track === 'function') track('orientation_change', { mode });
-
+  // Reflow wheel sizes on orientation switch
+  layoutSlot();
   // Example: tweak reveal/guess helper copy if desired
   // const help = document.querySelector('.microhelp');
   // if (help) help.textContent = mode === 'portrait'
@@ -638,6 +693,12 @@ logOrientation(mq);
 // Boot
 // -------------------------
 updateHUD();
+
+// Run once on boot
+layoutSlot();
+
+// Recompute on resize (covers URL bar show/hide + split-view changes)
+window.addEventListener('resize', layoutSlot);
 
 // Keep In Play text updated when config inputs change
 [minInput, maxInput].forEach(inp => {
