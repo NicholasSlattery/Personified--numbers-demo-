@@ -758,33 +758,32 @@ window.addEventListener('resize', layoutSlot);
   if (tryBtn) tryBtn.addEventListener('click', tryLockLandscape);
 })();
 
-// Register Service Worker for PWA/offline support
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => {
-        // If there's an already waiting worker, activate it
-        if (reg.waiting) promptReload(reg.waiting);
-        reg.addEventListener('updatefound', () => {
-          const newWorker = reg.installing;
-          if (!newWorker) return;
-          newWorker.addEventListener('statechange', () => {
-            if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              promptReload(newWorker);
-            }
-          });
-        });
-      })
-      .catch(err => console.error('SW registration failed', err));
-  });
-}
+// -------------------------
+// Service Worker Registration & Update Handling
+// -------------------------
+if ('serviceWorker' in navigator && window.isSecureContext) {
+  window.addEventListener('load', async () => {
+    try {
+      const reg = await navigator.serviceWorker.register('./sw.js'); // RELATIVE path
+      await reg.update(); // check immediately
 
-function promptReload(worker) {
-  // Auto-activate the new SW and reload to get the latest assets
-  try {
-    worker.postMessage('SKIP_WAITING');
-  } catch (e) {
-    /* ignore */
-  }
-  window.location.reload();
+      // If a new SW is found, activate it ASAP
+      reg.addEventListener('updatefound', () => {
+        const sw = reg.installing;
+        if (!sw) return;
+        sw.addEventListener('statechange', () => {
+          if (sw.state === 'installed' && navigator.serviceWorker.controller) {
+            reg.waiting?.postMessage?.('SKIP_WAITING');
+          }
+        });
+      });
+
+      // When the new SW takes control, reload to pick up fresh HTML/CSS/JS
+      navigator.serviceWorker.addEventListener('controllerchange', () => {
+        location.reload();
+      });
+    } catch (e) {
+      console.warn('SW registration/update failed:', e);
+    }
+  });
 }
