@@ -518,14 +518,8 @@ input:focus, .btn:focus{ outline: 2px solid var(--field-focus); outline-offset: 
 }
 
 /* App shell behaves like a fullscreen mobile app */
-html, body { height: 100%; }
-body{
-  min-height: 100dvh;
-  overflow: hidden;
-}
-.app, .shell{
-  height: 100dvh;
-}
+html, body { height: 100%; overflow: hidden; }   /* no page scrollbar */
+.app, .shell { height: 100dvh; overflow: hidden; }  /* contain layout */
 
 /* Shell Layout */
 .shell{
@@ -538,8 +532,80 @@ body{
   margin-bottom: 12px;
   overflow: visible;
 }
-.main-panel{ 
-  overflow: visible;
+.main-panel{
+  height: 100dvh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: max(16px, env(safe-area-inset-bottom));
+  overflow-x: hidden;
+}
+
+/* Viewport + overflow safety */
+/* Belt-and-suspenders: never allow horizontal scroll on the page */
+.app, .shell, .main-panel{ overflow-x: hidden; }
+
+/* Dynamic slot sizing driven by JS-set CSS vars */
+:root{
+  --slot-w: 360px;         /* updated in JS */
+  --slot-gap: 12px;        /* must match .reel gap */
+  --slot-pad: 24px;        /* must match .reel horizontal padding */
+  --tile-w: 80px;          /* updated in JS to fit exactly 3 tiles */
+  --tile-h: 56px;          /* updated in JS */
+  --tile-font: 36px;       /* updated in JS */
+}
+
+.slot{
+  position: relative;
+  width: min(100%, 560px);  /* respect the column; no overhang */
+  height: var(--tile-h);
+  margin: 0 auto 6px;
+  overflow: hidden;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid var(--border);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.06);
+}
+
+.reel{
+  gap: var(--slot-gap);
+  padding: 0 var(--slot-pad);
+}
+
+.tile{
+  min-width: var(--tile-w);
+  width: var(--tile-w);
+  height: var(--tile-h);
+  font-size: var(--tile-font);
+}
+
+/* Landscape defaults can still tweak max bounds, but JS will size tiles exactly */
+@media (orientation: landscape){
+  :root{
+    --slot-w: 560px; /* previous landscape width cap */
+  }
+}
+
+/* When height is tight (tiny landscape), let buttons wrap and shrink timer */
+@media (orientation: landscape) and (max-height: 420px){
+  #screen-guess .actions{ flex-wrap: wrap; }
+  #screen-guess .btn{ flex: 1 1 48%; min-width: 140px; }
+  .timer-display{ font-size: clamp(44px, 9vh, 56px); }
+}
+
+/* Also allow button wrap on narrow landscape widths */
+@media (orientation: landscape) and (max-width: 720px){
+  #screen-guess .actions{ flex-wrap: wrap; }
+}
+
+/* If space gets tight, don't force one-line buttons */
+#screen-guess .actions{
+  /* default (was nowrap in your landscape block) */
+  flex-wrap: wrap;
+}
+
+/* Keep them on one line only when there's actually room */
+@media (orientation: landscape) and (min-width: 900px) and (min-height: 480px){
+  #screen-guess .actions{ flex-wrap: nowrap; }
 }
 
 /* Grid Layout */
@@ -581,9 +647,8 @@ body{
     -webkit-overflow-scrolling: touch;
   }
 
-  /* Slot: wider and taller numbers for legibility in portrait */
-  .slot{ width: min(94vw, 420px); height: 92px; }
-  .tile{ min-width: 88px; height: 62px; font-size: 40px; }
+  /* Slot sizing now driven by JS layoutSlot() function */
+  /* (portrait-specific hard sizes removed to let variables work) */
 
   /* Guess screen: bigger timer and actions stacked */
   .timer-display{ font-size: 80px; }
@@ -643,15 +708,7 @@ body{
   }
 
   /* Tighten the slot so Reveal fits without page scroll */
-  .slot{
-    width: min(80vw, 560px);
-    height: 76px;
-  }
-  .tile{
-    min-width: 74px;
-    height: 50px;
-    font-size: 32px;
-  }
+  /* Slot sizing now driven by JS layoutSlot() function */
 
   /* Guess screen: timer slightly smaller to fit controls on one line */
   .timer-display{ font-size: 64px; }
@@ -711,4 +768,19 @@ button, input, select { font: inherit; }
 @media (prefers-contrast: more) {
   .card { border-color: color-mix(in srgb, var(--fg, var(--text)) 22%, transparent); }
   .btn { box-shadow: 0 1px 0 rgba(255,255,255,.2) inset, 0 10px 24px rgba(10,132,255,.26); }
+}
+
+/* Smooth tile transitions when layoutSlot() updates CSS variables */
+@media (prefers-reduced-motion: no-preference){
+  .tile{
+    transition:
+      min-width .18s ease,
+      width .18s ease,
+      height .18s ease,
+      font-size .18s ease;
+    will-change: width, height, font-size;
+  }
+  .slot{
+    transition: height .18s ease;
+  }
 }
