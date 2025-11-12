@@ -784,3 +784,43 @@ button, input, select { font: inherit; }
     transition: height .18s ease;
   }
 }
+
+/* ===== Portrait Orientation Lock ===== */
+/* Portrait: hide app, show rotate overlay */
+@media (orientation: portrait){
+  body.portrait #rotate-overlay{ display: grid; }
+  body.portrait #rotate-overlay[hidden]{ display: none; }
+  
+  #rotate-overlay{
+    position: fixed; inset: 0;
+    place-items: center;
+    background: rgba(0,0,0,0.9);
+    color: #fff;
+    z-index: 9999;
+  }
+  
+  .rotate-card{
+    padding: 24px 20px;
+    border: 1px solid rgba(255,255,255,.15);
+    border-radius: 16px;
+    background: rgba(255,255,255,.06);
+    text-align: center;
+    max-width: 420px;
+    width: calc(100% - 48px);
+  }
+  
+  .rotate-card h2{
+    margin: 0 0 12px;
+    font-size: 22px;
+    font-weight: 600;
+  }
+  
+  .rotate-card p{
+    margin: 0 0 20px;
+    font-size: 16px;
+    opacity: 0.9;
+  }
+  
+  /* Hide the app UI in portrait */
+  body.portrait .app { display: none; }
+}

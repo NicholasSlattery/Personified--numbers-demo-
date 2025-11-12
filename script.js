@@ -711,6 +711,53 @@ window.addEventListener('resize', layoutSlot);
   });
 });
 
+// -------------------------
+// Portrait Orientation Lock & Overlay
+// -------------------------
+(function(){
+  const overlay = document.getElementById('rotate-overlay');
+  const tryBtn  = document.getElementById('try-lock');
+
+  function isPortrait(){
+    // Fallback-friendly check
+    return (window.matchMedia && window.matchMedia("(orientation: portrait)").matches)
+           || (window.innerHeight > window.innerWidth);
+  }
+
+  function updateOrientationUI(){
+    const portrait = isPortrait();
+    document.body.classList.toggle('portrait', portrait);
+
+    if (overlay) {
+      overlay.hidden = !portrait;
+    }
+  }
+
+  // Try locking to landscape when the user taps the button
+  async function tryLockLandscape(){
+    try{
+      // Some browsers require fullscreen before lock; attempt politely
+      if (document.documentElement.requestFullscreen && !document.fullscreenElement){
+        await document.documentElement.requestFullscreen();
+      }
+      if (screen.orientation && screen.orientation.lock){
+        await screen.orientation.lock('landscape');
+      }
+    }catch(e){
+      // Silently ignore; overlay will remain until user rotates device
+      // console.debug('Orientation lock not available:', e);
+    }finally{
+      updateOrientationUI();
+    }
+  }
+
+  window.addEventListener('orientationchange', updateOrientationUI);
+  window.addEventListener('resize', updateOrientationUI);
+  window.addEventListener('load', updateOrientationUI);
+
+  if (tryBtn) tryBtn.addEventListener('click', tryLockLandscape);
+})();
+
 // Register Service Worker for PWA/offline support
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {

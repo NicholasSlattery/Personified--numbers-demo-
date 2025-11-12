@@ -2,9 +2,10 @@
   "name": "Personified",
   "short_name": "Personified",
   "description": "A two-player guessing game where numbers act like people.",
-  "start_url": "/index.html",
-  "scope": "/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "landscape",
   "background_color": "#0f1220",
   "theme_color": "#0f1220",
   "icons": [
