@@ -66,6 +66,7 @@ body{
   background: var(--bg, var(--bg1));
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
+  touch-action: manipulation;
 }
 
 /* Background gradient */
