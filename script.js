@@ -27,6 +27,44 @@ let timeLeft = defaultTimerSeconds;
 const EM_DASH = '\u2014'; // safe em dash for JS strings
 
 // -------------------------
+// Sound & Theme Logic
+// -------------------------
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playSpinTick() {
+  // Simple tick synth
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'triangle';
+  // Random variance to make it sound mechanical
+  osc.frequency.setValueAtTime(200 + Math.random() * 50, audioCtx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(50, audioCtx.currentTime + 0.05);
+  gain.gain.setValueAtTime(0.08, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.06);
+}
+
+const themes = {
+  default: { bg1: '#0f1220', bg2: '#141933', acc1: '#4e54c8', acc2: '#8f94fb' },
+  forest:  { bg1: '#0f2012', bg2: '#152e1b', acc1: '#2d8a4e', acc2: '#68d391' },
+  crimson: { bg1: '#200f0f', bg2: '#2e1515', acc1: '#c53030', acc2: '#fc8181' },
+  slate:   { bg1: '#1a202c', bg2: '#2d3748', acc1: '#4a5568', acc2: '#a0aec0' },
+};
+
+function applyTheme(key) {
+  const t = themes[key] || themes.default;
+  const root = document.documentElement;
+  root.style.setProperty('--bg1', t.bg1);
+  root.style.setProperty('--bg2', t.bg2);
+  root.style.setProperty('--accent-1', t.acc1);
+  root.style.setProperty('--accent-2', t.acc2);
+  localStorage.setItem('theme', key);
+}
+
+// -------------------------
 // DOM
 // -------------------------
 const screens = {
@@ -66,6 +104,7 @@ const maxInput = document.getElementById("maxInput");
 const roundsInput = document.getElementById("roundsInput");
 const timerInput = document.getElementById("timerInput");
 const avoidRepeatsInput = document.getElementById("avoidRepeats");
+const themeSelect = document.getElementById("themeSelect");
 
 // buttons
 const homeIcon = document.getElementById("homeIcon");
@@ -74,6 +113,14 @@ const howToPlayBtn = document.getElementById("howToPlayBtn");
 const htpBackBtn   = document.getElementById("htpBackBtn");
 if (howToPlayBtn) howToPlayBtn.onclick = () => go("htp");
 if (htpBackBtn)   htpBackBtn.onclick   = () => go("config");
+
+// Initialize theme
+const savedTheme = localStorage.getItem('theme') || 'default';
+if (themeSelect) {
+  themeSelect.value = savedTheme;
+  themeSelect.onchange = (e) => applyTheme(e.target.value);
+}
+applyTheme(savedTheme);
 
 // lightweight accessibility announcer
 function announce(msg){
@@ -150,7 +197,11 @@ document.getElementById("startBtn").addEventListener('click', (e) => {
     firstInvalid?.focus();
     return;
   }
+  // Ensure audio context is ready on user gesture
+  if (audioCtx.state === 'suspended') audioCtx.resume();
   // call existing startMatch
+  startMatch();
+});
   startMatch();
 });
 spinBtn.onclick = () => spinSlot();
@@ -482,9 +533,20 @@ async function spinSlot(auto = false){
   slotReel.style.transition = "none";
   slotReel.style.transform = "translateX(24px)";
   await new Promise(r => requestAnimationFrame(r));
+  
+  // Start ticking sound loop
+  const spinDuration = auto ? 900 : 1100;
+  const tickInterval = setInterval(() => {
+    // Play tick randomly during spin
+    if (Math.random() > 0.3) playSpinTick();
+  }, 120);
 
   // animate the reel so the target tile centers in the viewport
-  await centerOnTile(targetTile, auto ? 900 : 1100);
+  await centerOnTile(targetTile, spinDuration);
+  
+  // Stop sound
+  clearInterval(tickInterval);
+  playSpinTick(); // Final lock sound
 
   // done: glow the selected number
   targetTile.classList.add("selected");
