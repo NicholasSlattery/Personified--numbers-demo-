@@ -202,8 +202,7 @@ document.getElementById("startBtn").addEventListener('click', (e) => {
   // call existing startMatch
   startMatch();
 });
-  startMatch();
-});
+
 spinBtn.onclick = () => spinSlot();
 passBtn.onclick = () => go("guess");
 document.getElementById("correctBtn").onclick = () => { stopTimer(); finishRound(true); };
