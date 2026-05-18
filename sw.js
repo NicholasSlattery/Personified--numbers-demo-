@@ -4,8 +4,8 @@ const APP_SHELL = [
   '/',
   '/index.html',
   '/style.css',
-  '/script.js'
-  // add more assets you want guaranteed offline, e.g. fonts, images
+  '/script.js',
+  'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
 ];
 
 self.addEventListener('install', event => {
