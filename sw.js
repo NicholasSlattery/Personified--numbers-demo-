@@ -1,5 +1,5 @@
 /* sw.js - simple offline-first service worker */
-const APP_VERSION = 'pwa-v1';
+const APP_VERSION = 'pwa-v3';
 const APP_SHELL = [
   '/',
   '/index.html',

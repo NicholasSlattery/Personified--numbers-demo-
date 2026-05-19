@@ -3,204 +3,178 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <!-- Web App Manifest and theme color -->
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#ffffff">
+  <meta name="theme-color" content="#08080f">
 
-  <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- iOS install/presentation helpers -->
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Personified">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <title>Personified (Numbers Demo)</title>
+  <title>Personified</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <a class="skip" href="#setupHeading">Skip to setup</a>
-  
-  <!-- App Shell -->
+
+  <header class="top-bar" aria-label="Match status">
+    <button class="top-home" id="homeIcon" type="button" aria-label="Back to setup">
+      <svg aria-hidden="true" viewBox="0 0 24 24" width="18" height="18">
+        <path d="M3 10.5 12 3l9 7.5" />
+        <path d="M5 9.5V21h14V9.5" />
+        <path d="M9.5 21v-6h5v6" />
+      </svg>
+    </button>
+
+    <div class="top-score" aria-live="polite">
+      <span class="player-chip" id="p1Card">
+        <span id="p1Name">Player 1</span>
+        <span class="sr-only" id="p1Role"></span>
+      </span>
+      <span class="dot-separator" aria-hidden="true">&middot;</span>
+      <span id="p1Score">0</span>
+      <span aria-hidden="true">&mdash;</span>
+      <span id="p2Score">0</span>
+      <span class="dot-separator" aria-hidden="true">&middot;</span>
+      <span class="player-chip" id="p2Card">
+        <span id="p2Name">Player 2</span>
+        <span class="sr-only" id="p2Role"></span>
+      </span>
+      <span class="sr-only" id="p1Guesses">0 incorrect</span>
+      <span class="sr-only" id="p2Guesses">0 incorrect</span>
+    </div>
+
+    <div class="top-round" id="inPlayText" aria-live="polite">Round 1 of 5</div>
+  </header>
+
   <main role="main" class="app">
-    <div class="shell">
-      <aside id="playerPanel" class="player-panel">
-        <!-- Player HUD / Score Panel -->
-        <header class="hud card">
-          <div class="scores">
-            <div class="score" id="p1Card">
-              <small class="role" id="p1Role"></small>
-              <span class="label" id="p1Name">Player 1</span>
-              <span class="value" id="p1Score">0</span>
-              <small class="sub" id="p1Guesses">0 guesses</small>
-            </div>
-            <div class="score" id="p2Card">
-              <small class="role" id="p2Role"></small>
-              <span class="label" id="p2Name">Player 2</span>
-              <span class="value" id="p2Score">0</span>
-              <small class="sub" id="p2Guesses">0 guesses</small>
-            </div>
-          </div>
-          <div class="hud-actions">
-            <button class="icon-btn btn-ghost" id="homeIcon" aria-label="Home" type="button">Home</button>
-            <span class="inplay" id="inPlayText" aria-live="polite">In Play: 1-10</span>
-          </div>
-        </header>
-      </aside>
-
-      <section id="mainPanel" class="main-panel">
-
-    <!-- Config Screen -->
     <section id="screen-config" class="screen active">
-      <section class="card" aria-labelledby="setupHeading">
-        <header class="card-hd">
-          <h2 id="setupHeading">Match Setup</h2>
-          <p class="muted">A 2-player guessing game. One player gets a secret number and gives clues as if it were a person.</p>
+      <section class="card setup-card" aria-labelledby="setupHeading">
+        <header class="setup-hero">
+          <h1 id="setupHeading">Personified</h1>
+          <p>Numbers have personalities.</p>
         </header>
 
-        <div class="card-bd">
-          <div class="grid-2">
-            <div>
-              <h3 class="seg">Players</h3>
-              <div class="field">
-                <label for="p1Input">Player 1 Name</label>
-                <input id="p1Input" type="text" placeholder="Player 1" />
-              </div>
-              <div class="field">
-                <label for="p2Input">Player 2 Name</label>
-                <input id="p2Input" type="text" placeholder="Player 2" />
+        <div class="divider" aria-hidden="true"></div>
+
+        <div class="setup-form">
+          <section class="form-section" aria-labelledby="playersLabel">
+            <h2 class="section-label" id="playersLabel">Players</h2>
+            <div class="field">
+              <label for="p1Input">Player 1 Name</label>
+              <input id="p1Input" type="text" placeholder="Player 1" autocomplete="off" />
+            </div>
+            <div class="field">
+              <label for="p2Input">Player 2 Name</label>
+              <input id="p2Input" type="text" placeholder="Player 2" autocomplete="off" />
+            </div>
+          </section>
+
+          <section class="form-section" aria-labelledby="rulesLabel">
+            <h2 class="section-label" id="rulesLabel">Range &amp; Rules</h2>
+            <div class="field">
+              <label for="minInput">Range Minimum</label>
+              <input id="minInput" type="number" value="1" />
+            </div>
+            <div class="field">
+              <label for="maxInput">Range Maximum</label>
+              <input id="maxInput" type="number" value="10" />
+              <div id="rangeError" class="error" aria-live="polite" role="alert"></div>
+            </div>
+            <div class="field">
+              <label for="roundsInput">Rounds</label>
+              <div class="stepper" aria-label="Rounds">
+                <button class="stepper-btn" id="roundsMinus" type="button" aria-label="Decrease rounds">-</button>
+                <input id="roundsInput" type="number" min="1" value="5" aria-label="Rounds" />
+                <button class="stepper-btn" id="roundsPlus" type="button" aria-label="Increase rounds">+</button>
               </div>
             </div>
-
-            <div>
-              <h3 class="seg">Rules</h3>
-              <div class="field">
-                <label for="minInput">Range Minimum</label>
-                <input id="minInput" type="number" value="1" />
-              </div>
-              <div class="field">
-                <label for="maxInput">Range Maximum</label>
-                <input id="maxInput" type="number" value="10" />
-                <div id="rangeError" class="error" aria-live="polite" role="alert"></div>
-              </div>
-              <div class="field">
-                <label for="roundsInput">Rounds</label>
-                <input id="roundsInput" type="number" min="1" value="5" />
-              </div>
-              <div class="field">
-                <label for="timerInput">Timer (seconds)</label>
-                <input id="timerInput" type="number" min="10" value="180" />
-              </div>
+            <div class="field">
+              <label for="timerInput">Timer</label>
+              <input id="timerInput" type="number" min="10" value="180" />
+              <span class="hint">seconds per turn</span>
             </div>
-          </div>
-
-          <div class="field">
-            <label class="switch" for="avoidRepeats">
-              <input id="avoidRepeats" type="checkbox" />
-              <span>Each number appears only once per match</span>
-            </label>
-          </div>
-
-          <div class="field">
-            <label for="themeSelect">Theme</label>
-            <select id="themeSelect">
-              <option value="default">Cosmic (Default)</option>
-              <option value="forest">Forest</option>
-              <option value="crimson">Crimson</option>
-              <option value="slate">Slate</option>
-            </select>
-          </div>
+          </section>
         </div>
 
-        <footer class="card-ft">
-          <button id="startBtn" class="btn btn-primary" type="button">Start Match</button>
-          <button id="howToPlayBtn" class="btn btn-ghost" type="button">How to Play</button>
+        <label class="toggle" for="avoidRepeats">
+          <input id="avoidRepeats" type="checkbox" />
+          <span class="toggle-track" aria-hidden="true"><span class="toggle-knob"></span></span>
+          <span>Each number appears only once per match</span>
+        </label>
+
+        <footer class="setup-footer">
+          <button id="startBtn" class="btn btn-primary btn-large" type="button">Start Match</button>
         </footer>
       </section>
     </section>
 
-    <!-- How To Play Screen -->
-    <section id="screen-htp" class="screen card">
-      <div class="card-hd">
-        <h2>How to Play</h2>
-      </div>
-      <div class="card-bd">
-        <ol class="muted">
-          <li>Player 1 spins for a secret number.</li>
-          <li>Player 1 gives clues as if the number were a person (e.g., "What color are its eyes?").</li>
-          <li>Player 2 asks questions and guesses.</li>
-          <li>Press <strong>Correct</strong> on a right guess, or <strong>Incorrect Guess</strong> for a miss.</li>
-          <li>Roles swap. A full round is when both players have had a turn describing.</li>
-          <li>Winner is the player with the most points. Ties are broken by fewest incorrect guesses.</li>
-        </ol>
-      </div>
-      <footer class="card-ft">
-        <button class="btn btn-primary" id="htpBackBtn" type="button">Back to Setup</button>
-      </footer>
-    </section>
+    <section id="screen-reveal" class="screen">
+      <section class="card reveal-card" aria-labelledby="revealTitle">
+        <header class="reveal-header">
+          <h2 id="revealTitle"><span>Player 1</span> <small>&mdash; spin for your number</small></h2>
+        </header>
 
-    <!-- Reveal Screen (Slot Machine) -->
-    <section id="screen-reveal" class="screen card">
-      <header class="card-hd">
-        <h2 id="revealTitle">Player: Spin to Select Number</h2>
-        <p class="muted">The other player should look away from the screen.</p>
-      </header>
-      <div class="card-bd">
-        <div class="slot-card">
-          <div class="slot" id="slotViewport" aria-live="polite" aria-label="Number slot reel">
-            <div class="reel" id="slotReel"></div>
-          </div>
-          <div class="actions">
-            <button class="btn btn-primary" id="spinBtn" type="button">Spin</button>
-            <button class="btn btn-ghost" id="passBtn" type="button">Lock In & Start</button>
-          </div>
+        <div class="slot" id="slotViewport" aria-live="polite" aria-label="Number slot reel">
+          <div class="reel" id="slotReel"></div>
         </div>
-      </div>
+
+        <div class="button-row">
+          <button class="btn btn-primary" id="spinBtn" type="button">Spin</button>
+          <button class="btn btn-ghost" id="passBtn" type="button">Lock In &amp; Start</button>
+        </div>
+        <p class="look-away">Other player, look away.</p>
+      </section>
     </section>
 
-    <!-- Guess Screen -->
-    <section id="screen-guess" class="screen card">
-      <header class="card-hd">
-        <h2 id="guessTitle">Player</h2>
-        <p class="muted">The number has been selected. Start asking questions!</p>
-      </header>
-      <div class="card-bd">
-        <div class="muted">Secret Number</div>
+    <section id="screen-guess" class="screen">
+      <section class="card guess-card" aria-labelledby="guessTitle">
+        <div class="role-label" id="guessTitle">Player 1 is describing</div>
         <div class="big-number" id="guessNumber">&mdash;</div>
-        <div class="muted">Time Remaining</div>
         <div class="timer-display" id="timerDisplay" aria-live="polite">3:00</div>
+        <div class="guess-stats"><span id="guessCount" aria-live="polite">0</span> incorrect</div>
 
-        <div class="guess-stats">
-          Incorrect Guesses: <strong id="guessCount" aria-live="polite">0</strong>
+        <div class="guess-actions">
+          <button class="btn success" id="correctBtn" type="button">Correct &#10003;</button>
+          <button class="btn danger" id="incorrectBtn" type="button">Incorrect Guess &#10007;</button>
+          <button class="btn warn" id="giveUpBtn" type="button">They Give Up</button>
         </div>
-      </div>
-      <footer class="card-ft">
-        <button class="btn success" id="correctBtn" type="button">Correct</button>
-        <button class="btn danger" id="incorrectBtn" type="button">Incorrect Guess</button>
-        <button class="btn warn" id="giveUpBtn" type="button">They Give Up</button>
-      </footer>
+      </section>
     </section>
 
-    <!-- Scoreboard -->
-    <section id="screen-scoreboard" class="screen card">
-      <header class="card-hd">
-        <h2>Match Results</h2>
-      </header>
-      <div class="card-bd">
-        <div class="final">
-          <div><strong id="finalP1Name">Player 1</strong>: <span id="finalP1Score">0</span> (guesses <span id="finalP1Guess">0</span>)</div>
-          <div><strong id="finalP2Name">Player 2</strong>: <span id="finalP2Score">0</span> (guesses <span id="finalP2Guess">0</span>)</div>
+    <section id="screen-scoreboard" class="screen">
+      <section class="card scoreboard-card" aria-labelledby="winnerText">
+        <header class="scoreboard-header">
+          <h2 id="winnerText">Match Over</h2>
+        </header>
+
+        <div class="results">
+          <div class="result-row" id="finalP1Row">
+            <div>
+              <strong id="finalP1Name">Player 1</strong>
+              <span><span id="finalP1Guess">0</span> incorrect guesses</span>
+            </div>
+            <span class="final-score" id="finalP1Score">0</span>
+          </div>
+          <div class="result-row" id="finalP2Row">
+            <div>
+              <strong id="finalP2Name">Player 2</strong>
+              <span><span id="finalP2Guess">0</span> incorrect guesses</span>
+            </div>
+            <span class="final-score" id="finalP2Score">0</span>
+          </div>
         </div>
-        <div class="winner" id="winnerText">Winner: &mdash;</div>
-      </div>
-      <footer class="card-ft">
-        <button class="btn btn-primary" id="playAgainBtn" type="button">Play Again</button>
-      </footer>
+
+        <footer class="scoreboard-actions">
+          <button class="btn btn-primary" id="playAgainBtn" type="button">Play Again</button>
+          <button class="btn btn-ghost" id="backSetupBtn" type="button">Back to Setup</button>
+        </footer>
+      </section>
     </section>
 
-    <!-- Accessibility Live Region -->
     <div class="sr-only" id="live" aria-live="polite" aria-atomic="true"></div>
   </main>
 

@@ -24,7 +24,7 @@ const GameState = {
 const EM_DASH = '\u2014';
 
 // ==========================================================================
-// Sound & Theme
+// Sound
 // ==========================================================================
 const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
@@ -45,29 +45,11 @@ function playSound(type) {
   }
 }
 
-const themes = {
-  default: { '--bg-default': '#f9fafb', '--bg-surface': '#ffffff', '--accent-primary': '#2563eb', '--text-default': '#111827' },
-  forest:  { '--bg-default': '#f0fdf4', '--bg-surface': '#ffffff', '--accent-primary': '#16a34a', '--text-default': '#14532d' },
-  crimson: { '--bg-default': '#fef2f2', '--bg-surface': '#ffffff', '--accent-primary': '#dc2626', '--text-default': '#991b1b' },
-  slate:   { '--bg-default': '#f8fafc', '--bg-surface': '#ffffff', '--accent-primary': '#475569', '--text-default': '#1e293b' },
-};
-
-function applyTheme(key) {
-  const theme = themes[key] || themes.default;
-  const root = document.documentElement;
-  for (const [prop, value] of Object.entries(theme)) {
-    root.style.setProperty(prop, value);
-  }
-  localStorage.setItem('theme', key);
-}
-
-
 // ==========================================================================
 // DOM Elements
 // ==========================================================================
 const screens = {
   config: document.getElementById("screen-config"),
-  htp: document.getElementById("screen-htp"),
   reveal: document.getElementById("screen-reveal"),
   guess: document.getElementById("screen-guess"),
   board: document.getElementById("screen-scoreboard"),
@@ -102,9 +84,10 @@ const maxInput = document.getElementById("maxInput");
 const roundsInput = document.getElementById("roundsInput");
 const timerInput = document.getElementById("timerInput");
 const avoidRepeatsInput = document.getElementById("avoidRepeats");
-const themeSelect = document.getElementById("themeSelect");
 const startBtn = document.getElementById('startBtn');
 const rangeError = document.getElementById('rangeError');
+const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+let screenTransitionToken = 0;
 
 
 // ==========================================================================
@@ -142,27 +125,35 @@ function updateHUD() {
   setLive(p2ScoreEl, GameState.p2.score);
   setLive(p1GuessesEl, `${GameState.p1.totalGuesses} incorrect`);
   setLive(p2GuessesEl, `${GameState.p2.totalGuesses} incorrect`);
-  setLive(inPlayText, `In Play: ${GameState.rangeMin}-${GameState.rangeMax}`);
+  const displayRound = Math.min(GameState.roundIndex + 1, GameState.rounds);
+  setLive(inPlayText, `Round ${displayRound} of ${GameState.rounds}`);
 
   const p1Card = document.getElementById("p1Card");
   const p2Card = document.getElementById("p2Card");
-  p1Card.classList.toggle("active", GameState.isP1Guesser);
-  p2Card.classList.toggle("active", !GameState.isP1Guesser);
+  p1Card.classList.toggle("active", !GameState.isP1Guesser);
+  p2Card.classList.toggle("active", GameState.isP1Guesser);
   
   setLive(p1RoleEl, GameState.isP1Guesser ? "Guesser" : "Describer");
   setLive(p2RoleEl, !GameState.isP1Guesser ? "Guesser" : "Describer");
 }
 
+function setRevealTitle(describerName) {
+  const name = document.createElement('span');
+  const note = document.createElement('small');
+  name.textContent = describerName;
+  note.textContent = ` ${EM_DASH} spin for your number`;
+  revealTitle.replaceChildren(name, note);
+}
+
 function go(name) {
   stopTimer();
-  Object.values(screens).forEach(s => s.classList.remove("active"));
 
   if (name === "guess") {
     GameState.guessesThisRound = 0;
     updateGuessUI();
 
     const describerName = GameState.isP1Guesser ? GameState.p2.name : GameState.p1.name;
-    setLive(guessTitle, `${describerName} is Describing`);
+    setLive(guessTitle, `${describerName} is describing`);
     setLive(guessNumberEl, GameState.currentNumber ?? EM_DASH);
 
     if (GameState.currentNumber === null) {
@@ -177,11 +168,42 @@ function go(name) {
 
   if (name === "reveal") {
     const describerName = GameState.isP1Guesser ? GameState.p2.name : GameState.p1.name;
-    setLive(revealTitle, `${describerName}: Spin to Select Number`);
+    setRevealTitle(describerName);
   }
 
-  if (screens[name]) screens[name].classList.add("active");
   updateHUD();
+
+  const nextScreen = screens[name];
+  if (!nextScreen) return;
+
+  const currentScreen = Object.values(screens).find(s => s.classList.contains("active"));
+  if (currentScreen === nextScreen) {
+    nextScreen.classList.remove("leaving", "entering");
+    return;
+  }
+
+  const token = ++screenTransitionToken;
+  const activateNext = () => {
+    if (token !== screenTransitionToken) return;
+    Object.values(screens).forEach(s => s.classList.remove("active", "leaving", "entering"));
+    nextScreen.classList.add("active", "entering");
+    if (prefersReducedMotion.matches) {
+      nextScreen.classList.remove("entering");
+    } else {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          if (token === screenTransitionToken) nextScreen.classList.remove("entering");
+        });
+      });
+    }
+  };
+
+  if (!currentScreen || prefersReducedMotion.matches) {
+    activateNext();
+  } else {
+    currentScreen.classList.add("leaving");
+    setTimeout(activateNext, 200);
+  }
 }
 
 function validateSetup() {
@@ -189,6 +211,7 @@ function validateSetup() {
   const setInvalid = (el, isInvalid, message = '') => {
     const field = el.closest('.field');
     field?.classList.toggle('invalid', isInvalid);
+    el.setAttribute('aria-invalid', String(isInvalid));
     if (el === maxInput) rangeError.textContent = isInvalid ? message : '';
     isValid = isValid && !isInvalid;
   };
@@ -208,6 +231,7 @@ function validateSetup() {
 // ==========================================================================
 function updateTimerDisplay() {
   setLive(timerDisplay, formatMMSS(GameState.timeLeft));
+  timerDisplay.classList.toggle("is-low", GameState.timeLeft <= 10);
 }
 
 function startTimer() {
@@ -375,15 +399,26 @@ function endMatch() {
   setLive(document.getElementById("finalP1Guess"), p1.totalGuesses);
   setLive(document.getElementById("finalP2Guess"), p2.totalGuesses);
 
-  let winner = EM_DASH;
+  const winnerText = document.getElementById("winnerText");
+  const p1Row = document.getElementById("finalP1Row");
+  const p2Row = document.getElementById("finalP2Row");
+  let winnerPlayer = null;
   if (p1.score !== p2.score) {
-    winner = p1.score > p2.score ? p1.name : p2.name;
+    winnerPlayer = p1.score > p2.score ? 'p1' : 'p2';
   } else if (p1.totalGuesses !== p2.totalGuesses) {
-    winner = p1.totalGuesses < p2.totalGuesses ? p1.name : p2.name;
-  } else {
-    winner = "It's a tie!";
+    winnerPlayer = p1.totalGuesses < p2.totalGuesses ? 'p1' : 'p2';
   }
-  setLive(document.getElementById("winnerText"), `Winner: ${winner}`);
+
+  p1Row.classList.toggle("winner-row", winnerPlayer === 'p1');
+  p2Row.classList.toggle("winner-row", winnerPlayer === 'p2');
+  winnerText.classList.toggle("tie", winnerPlayer === null);
+
+  if (winnerPlayer === null) {
+    setLive(winnerText, `Too close to call ${EM_DASH} Sudden Death`);
+  } else {
+    const winnerName = winnerPlayer === 'p1' ? p1.name : p2.name;
+    setLive(winnerText, `${winnerName} wins`);
+  }
   
   go("board");
 }
@@ -426,21 +461,22 @@ function init() {
     updateGuessUI();
   });
   giveUpBtn.addEventListener('click', () => finishRound(false));
-  document.getElementById("playAgainBtn")?.addEventListener('click', returnToLobby);
+  document.getElementById("playAgainBtn")?.addEventListener('click', startMatch);
+  document.getElementById("backSetupBtn")?.addEventListener('click', returnToLobby);
   document.getElementById("homeIcon")?.addEventListener('click', returnToLobby);
-  document.getElementById("howToPlayBtn")?.addEventListener('click', () => go("htp"));
-  document.getElementById("htpBackBtn")?.addEventListener('click', () => go("config"));
+  document.getElementById("roundsMinus")?.addEventListener('click', () => {
+    roundsInput.value = String(Math.max(1, (parseInt(roundsInput.value, 10) || 1) - 1));
+    validateSetup();
+  });
+  document.getElementById("roundsPlus")?.addEventListener('click', () => {
+    roundsInput.value = String(Math.max(1, (parseInt(roundsInput.value, 10) || 1) + 1));
+    validateSetup();
+  });
   
   // Config inputs
   [minInput, maxInput, roundsInput, timerInput].forEach(el => {
     el.addEventListener('input', validateSetup);
   });
-  
-  // Theme
-  const savedTheme = localStorage.getItem('theme') || 'default';
-  themeSelect.value = savedTheme;
-  themeSelect.onchange = (e) => applyTheme(e.target.value);
-  applyTheme(savedTheme);
   
   // Initial state
   updateHUD();
